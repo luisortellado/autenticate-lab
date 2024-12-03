@@ -3,17 +3,24 @@ import {View, TextInput, Button, Text, StyleSheet} from 'react-native';
 import {login} from '../services/AuthService';
 import * as Keychain from 'react-native-keychain';
 import {useAuth} from '../../App';
+import {validatePassword, validateUsername} from '../utils/utils';
 
 const LoginScreen: React.FC<{navigation: any}> = ({navigation}) => {
   const {setIsAuthenticated} = useAuth();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [username, setUsername] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [error, setError] = useState<string | null>('');
 
   const handleLogin = async () => {
+    const usernameError = validateUsername(username);
+    const passwordError = validatePassword(password);
+
+    if (usernameError || passwordError) {
+      setError(usernameError || passwordError);
+      return;
+    }
     try {
       const {token, expiresAt} = await login(username, password);
-      // Store JWT securely
       await Keychain.setGenericPassword(
         'authToken',
         JSON.stringify({token, expiresAt}),
